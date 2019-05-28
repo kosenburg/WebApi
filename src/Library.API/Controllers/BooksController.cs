@@ -1,11 +1,10 @@
 ﻿using AutoMapper;
+using Library.API.Entities;
 using Library.API.Models;
 using Library.API.Services;
 using Microsoft.AspNetCore.Mvc;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
 
 namespace Library.API.Controllers
 {
@@ -18,7 +17,7 @@ namespace Library.API.Controllers
         {
             this.libraryRepository = libraryRepository;
         }
-        
+
         [HttpGet]
         public IActionResult GetBooksForAuthor(Guid authorId)
         {
@@ -32,7 +31,7 @@ namespace Library.API.Controllers
             return Ok(booksForAuthor);
         }
 
-        [HttpGet("{id}")]
+        [HttpGet("{id}", Name = "GetBookForAuthor")]
         public IActionResult GetBookForAuthor(Guid authorId, Guid id)
         {
             if (!libraryRepository.AuthorExists(authorId))
@@ -49,6 +48,31 @@ namespace Library.API.Controllers
 
             var bookForAuthor = Mapper.Map<BookDto>(bookForAuthorFromRepo);
             return Ok(bookForAuthor);
+        }
+
+        [HttpPost]
+        public IActionResult CreateBookForAuthor(Guid authorId, [FromBody] BookForCreationDto bookForCreation)
+        {
+            if (bookForCreation == null)
+            {
+                return BadRequest();
+            }
+
+            if (!libraryRepository.AuthorExists(authorId))
+            {
+                return NotFound();
+            }
+
+            var bookEntity = Mapper.Map<Book>(bookForCreation);
+            libraryRepository.AddBookForAuthor(authorId, bookEntity);
+            if (!libraryRepository.Save())
+            {
+                throw new Exception($"Creating a book for author {authorId} failed on save");
+            }
+
+            var bookToReturn = Mapper.Map<BookDto>(bookEntity);
+
+            return CreatedAtRoute("GetBookForAuthor", new { authorId = bookToReturn.AuthorId, id = bookToReturn.Id }, bookToReturn);
         }
     }
 }

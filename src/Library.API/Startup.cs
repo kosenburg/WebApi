@@ -1,18 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using Library.API.Entities;
+using Library.API.Helpers;
+using Library.API.Services;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc.Formatters;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
-using Microsoft.Extensions.Configuration;
-using Library.API.Services;
-using Library.API.Entities;
-using Microsoft.EntityFrameworkCore;
-using Library.API.Helpers;
-using Microsoft.AspNetCore.Mvc.Formatters;
 
 namespace Library.API
 {
@@ -46,9 +42,9 @@ namespace Library.API
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
-        public void Configure(IApplicationBuilder app, IHostingEnvironment env, 
+        public void Configure(IApplicationBuilder app, IHostingEnvironment env,
             ILoggerFactory loggerFactory, LibraryContext libraryContext)
-        {           
+        {
             if (env.IsDevelopment())
             {
                 app.UseDeveloperExceptionPage();
@@ -57,7 +53,8 @@ namespace Library.API
             {
                 app.UseExceptionHandler(appBuilder =>
                 {
-                    appBuilder.Run(async context => {
+                    appBuilder.Run(async context =>
+                    {
                         context.Response.StatusCode = 500;
                         await context.Response.WriteAsync("An unexpected fault has happened. Try again later");
                     });
@@ -71,11 +68,13 @@ namespace Library.API
                 .ForMember(dest => dest.Age, opt => opt.MapFrom(src => src.DateOfBirth.GetCurrentAge()));
 
                 cfg.CreateMap<Entities.Book, Models.BookDto>();
+                cfg.CreateMap<Models.AuthorForCreationDto, Entities.Author>();
+                cfg.CreateMap<Models.BookForCreationDto, Entities.Book>();
             });
 
             libraryContext.EnsureSeedDataForContext();
 
-            app.UseMvc(); 
+            app.UseMvc();
         }
     }
 }
