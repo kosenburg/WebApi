@@ -112,7 +112,7 @@ namespace Library.API.Controllers
             }
 
             logger.LogInformation(100, $"Book {id} for author {authorId} was deleted.");
-            
+
             return NoContent();
         }
 
